@@ -2349,7 +2349,11 @@ function window:AddTab(config)
    local function responsive(forceCompact)
     local camera=workspace.CurrentCamera
     local narrow=type(forceCompact)=="boolean" and forceCompact or (camera and camera.ViewportSize.X<760)
-    if narrow==compact then return end;compact=narrow
+     local pending=false
+     if narrow then
+      for _,item in ipairs(right:GetChildren()) do if item:IsA("GuiObject") then pending=true;break end end
+     end
+     if narrow==compact and not pending then return end;compact=narrow
     page.Compact=narrow
     local children={}
     for _,col in ipairs({left,right}) do
@@ -2366,6 +2370,8 @@ function window:AddTab(config)
        item.LayoutOrder=item:GetAttribute("HomeOrder")+(narrow and home==2 and 1000 or 0)
     end
     left.Size=narrow and UDim2.new(1,0,1,0) or UDim2.new(.5,-5,1,0)
+     left.ScrollBarThickness=narrow and 5 or 0
+     left.Active=true;right.Active=true
     right.Visible=not narrow;container.ColumnDivider.Visible=not narrow
    end
    page.RefreshResponsive=responsive
@@ -2643,6 +2649,7 @@ end
 
 getgenv().FoccusUILibrary = Foccus
 Foccus.APIVersion=1
+Foccus.LayoutRevision=2
 function Foccus:GetLogo()
 local logo="rbxassetid://113695702338739"
 do
