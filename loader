@@ -1,5 +1,6 @@
 if not game:IsLoaded() then game.Loaded:Wait() end
 local scripts = {
+    [10296941834] = "secret",
     [10675117523] = "breaker",
     [9647950637] = "revengers",
     [10501944811] = "beatanimeboss",
