@@ -1,7 +1,7 @@
 local env = getgenv()
 
 
-local ALLOWED_USER_ID = 8199319552  
+local ALLOWED_USER_ID = 7860279790  
 local localPlayer = game:GetService("Players").LocalPlayer
 local userId = localPlayer and localPlayer.UserId or 0
 
