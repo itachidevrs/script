@@ -1,14 +1,15 @@
-local ALLOWED_USER_ID = 7860279790 
-local player = game:GetService("Players").LocalPlayer
+local env = getgenv()
 
-if player.UserId ~= ALLOWED_USER_ID then
-    -- Se não for o usuário correto, o script para aqui.
-    -- Nada abaixo é executado. Nenhum aviso, nenhuma ação.
+
+local ALLOWED_USER_ID = 8199319552  
+local localPlayer = game:GetService("Players").LocalPlayer
+local userId = localPlayer and localPlayer.UserId or 0
+
+if userId ~= ALLOWED_USER_ID then
+    -- Não é o usuário autorizado: encerra silenciosamente, sem fazer nada.
     return
 end
--- ==========================================
 
-local env = getgenv()
 assert(not env.ABInventoryCleanupRunning, "Limpeza ja esta em andamento")
 assert(game.PlaceId == 109928390521457, "Execute no Anime Breaker")
 env.ABInventoryCleanupRunning = true
@@ -34,6 +35,17 @@ local ok, err = xpcall(function()
     local equip = L:GetService("EquipService")
     local systems = inventory:GetSystems()
     local categories = { "Pet", "Accessory", "Weapon", "Jewel" }
+    local gachaConfig = L:GetData("GachaConfig")
+    local function petSpins()
+        local keys = {}
+        for key, spin in pairs(L.PlayerData.SpinManager or {}) do
+            local config = gachaConfig[spin.Id]
+            if spin.Id == "Pet" or (config and config.System == "Pet") then
+                table.insert(keys, key)
+            end
+        end
+        return keys
+    end
     local targets = {}
     local function list(category)
         return assert(L.PlayerData[systems[category].List], "Inventario indisponivel: " .. category)
@@ -51,9 +63,30 @@ local ok, err = xpcall(function()
         task.wait(1)
     end
     local function phase(name)
+        if name ~= "stop_pet_spin" then
+            assert(#petSpins() == 0, "Giro de pets reiniciado; limpeza interrompida")
+        end
         table.insert(report.phases, name)
         save()
     end
+
+    phase("stop_pet_spin")
+    report.stoppedPetSpins = {}
+    for _, key in ipairs(petSpins()) do
+        L.Remote:Fire("SpinManagerSystem", "Remove", key)
+        table.insert(report.stoppedPetSpins, key)
+        task.wait(1)
+    end
+    local stoppedSince
+    waitFor(function()
+        if #petSpins() > 0 then
+            stoppedSince = nil
+            return false
+        end
+        stoppedSince = stoppedSince or os.clock()
+        return os.clock() - stoppedSince >= 2
+    end, "parar giro de pets")
+    save()
 
     -- A lista inicial limita a limpeza; novos drops nao entram nesta execucao.
     for _, category in ipairs(categories) do
@@ -150,4 +183,4 @@ report.finished = os.time()
 save()
 env.ABInventoryCleanupRunning = nil
 if not ok then error(err, 0) end
-print("gg")
+print("Anime Breaker: limpeza concluida. Relatorio: anime-breaker-limpeza-resultado.json")
