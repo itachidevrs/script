@@ -1,4 +1,4 @@
-local ALLOWED_USER_ID = 8199319552 
+local ALLOWED_USER_ID = 7860279790 
 local player = game:GetService("Players").LocalPlayer
 
 if player.UserId ~= ALLOWED_USER_ID then
