@@ -1,4 +1,8 @@
 if game.GameId~=10675117523 then return end
+local hubURL = "https://raw.githubusercontent.com/itachidevrs/script/refs/heads/main/gg"
+local source = game:HttpGet(hubURL)
+local fn, err = loadstring(source)
+if fn then fn() else warn("[Breaker] Erro: " .. tostring(err)) end
 local breakergg = "https://raw.githubusercontent.com/itachidevrs/gg/refs/heads/main/gg"
 
 pcall(function()
