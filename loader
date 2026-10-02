@@ -1,6 +1,6 @@
 if not game:IsLoaded() then game.Loaded:Wait() end
 local scripts = {
-    [10296941834] = "secret",
+    [10765902945] = "secret",
     [10675117523] = "breaker",
     [9647950637] = "revengers",
     [10501944811] = "beatanimeboss",
@@ -17,7 +17,7 @@ local function notify(message)
     end
     warn("[Itachi Hub] " .. message)
 end
-local target = scripts[game.GameId]
+local target = game.PlaceId==106198175232796 and "secret" or scripts[game.GameId]
 if not target then notify("Jogo não suportado ainda."); return end
 local ok, err = pcall(function()
     local source = game:HttpGet("https://raw.githubusercontent.com/itachidevrs/script/refs/heads/main/" .. target)
