@@ -2703,6 +2703,7 @@ do
   end
   local properties={}
   if object:IsA("GuiObject") then table.insert(properties,"BackgroundColor3") end
+  if object:IsA("ScrollingFrame") then table.insert(properties,"ScrollBarImageColor3") end
   if object:IsA("TextLabel") or object:IsA("TextButton") or object:IsA("TextBox") then table.insert(properties,"TextColor3") end
   if object:IsA("ImageLabel") or object:IsA("ImageButton") then table.insert(properties,"ImageColor3") end
   if object:IsA("UIStroke") or object:IsA("UIGradient") then table.insert(properties,"Color") end
