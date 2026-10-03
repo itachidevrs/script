@@ -2804,7 +2804,8 @@ do
  local haloAsset
  local function attach(button)
   if not button:IsA("ImageButton") or (button.Name~="CofizinGGToggle" and button.Name~="ItachiLegacyLauncher") or halos[button] then return end
-  local halo=make("ImageLabel",gui,{Name="LauncherHalo",BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),Active=false,Selectable=false,Image=haloAsset or "",ImageTransparency=.12,ZIndex=math.max(1,button.ZIndex-1),Visible=false,ScaleType=Enum.ScaleType.Fit})
+  button.ClipsDescendants=false
+  local halo=make("ImageLabel",button,{Name="LauncherHalo",BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Active=false,Selectable=false,Image=haloAsset or "",ImageTransparency=.12,ZIndex=math.max(1,button.ZIndex-1),Visible=false,ScaleType=Enum.ScaleType.Fit})
   halos[button]=halo
  end
  for _,object in ipairs(gui:GetDescendants()) do attach(object) end
@@ -2841,8 +2842,8 @@ do
     local size=button.AbsoluteSize
     local pulse=1.75+.07*math.sin(elapsed*2)
     halo.Visible=button.Visible and gui.Enabled and haloAsset~=nil and haloAsset~=""
-    halo.Position=UDim2.fromOffset(button.AbsolutePosition.X+size.X/2,button.AbsolutePosition.Y+size.Y/2)
-    halo.Size=UDim2.fromOffset(size.X*pulse,size.Y*pulse)
+    halo.Position=UDim2.fromScale(.5,.5)
+    halo.Size=UDim2.fromScale(pulse,pulse)
     halo.Rotation=(elapsed*24)%360
     halo.ImageTransparency=.13+.09*math.sin(elapsed*2)
     halo.ImageColor3=window.GetThemeAccent and window:GetThemeAccent() or Theme.Gold
