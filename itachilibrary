@@ -262,6 +262,7 @@ function Library:CreateWindow(options)
 
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "FoccusLibraryUI"
+	if env.ItachiHubRegisterLoadingGui then env.ItachiHubRegisterLoadingGui(gui) end
 	gui.ResetOnSpawn = false
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	gui.Parent = parent
@@ -2050,7 +2051,7 @@ do
  make("UICorner",wallpaper,{CornerRadius=UDim.new(0,12)})
  task.spawn(function()
   local asset=loadBrandAsset("background",config.BackgroundUrl or "https://raw.githubusercontent.com/itachidevrs/script/main/background.png")
-  if asset and STATE.alive() and wallpaper.Parent then wallpaper.Image=asset end
+  if asset and STATE.alive() and wallpaper.Parent and frame:GetAttribute("ThemeName")~="Itachi - Dark" then wallpaper.Image=asset end
  end)
  -- Older game builds add their own wallpaper after the shared UI initializes.
  track(frame.ChildAdded,function(child)
@@ -2680,6 +2681,73 @@ local function applyVisualStyle(instance)
 end
 for _,instance in ipairs(frame:GetDescendants()) do applyVisualStyle(instance) end
 track(frame.DescendantAdded,applyVisualStyle)
+do
+ local red=table.clone(Theme)
+ local records=setmetatable({},{__mode="k"})
+ local dark=false
+ local revision=0
+ local function convert(color)
+  local h,s,v=color:ToHSV()
+  if s>.25 and (h<.12 or h>.9) then return Color3.fromRGB(math.floor(v*220),math.floor(v*224),math.floor(v*235)) end
+  return color
+ end
+ local function watch(object)
+  local properties={}
+  if object:IsA("GuiObject") then table.insert(properties,"BackgroundColor3") end
+  if object:IsA("TextLabel") or object:IsA("TextButton") or object:IsA("TextBox") then table.insert(properties,"TextColor3") end
+  if object:IsA("ImageLabel") or object:IsA("ImageButton") then table.insert(properties,"ImageColor3") end
+  if object:IsA("UIStroke") or object:IsA("UIGradient") then table.insert(properties,"Color") end
+  local record={};records[object]=record
+  local writing=false
+  local function apply(property)
+   if writing then return end
+   local value=object[property]
+   if typeof(value)=="Color3" then
+    if convert(value)~=value then record[property]=value end
+    if dark then writing=true;object[property]=convert(value);writing=false end
+   elseif typeof(value)=="ColorSequence" then
+    record[property]=record[property] or value
+    if dark then
+     local points={};for _,p in ipairs(value.Keypoints) do table.insert(points,ColorSequenceKeypoint.new(p.Time,convert(p.Value))) end
+     writing=true;object[property]=ColorSequence.new(points);writing=false
+    end
+   end
+  end
+  for _,property in ipairs(properties) do track(object:GetPropertyChangedSignal(property),function()apply(property)end);apply(property) end
+ end
+ for _,object in ipairs(gui:GetDescendants()) do watch(object) end
+ track(gui.DescendantAdded,watch)
+ function window:SetTheme(name)
+  name=name=="Itachi - Dark" and name or "Itachi - Red"
+  if self.ThemeName==name then return end
+  self.ThemeName=name;frame:SetAttribute("ThemeName",name);dark=name=="Itachi - Dark";revision=revision+1
+  local current=revision
+  for key,value in pairs(red) do Theme[key]=dark and convert(value) or value end
+  for object,record in pairs(records) do
+   if object.Parent then for property,value in pairs(record) do object[property]=value end end
+  end
+  task.spawn(function()
+   local logo=loadBrandAsset(dark and "dark-logo" or "logo-v2","https://raw.githubusercontent.com/itachidevrs/script/main/"..(dark and "darklogo.png" or "logo.png"))
+   local wallpaper=loadBrandAsset(dark and "dark-background" or "background","https://raw.githubusercontent.com/itachidevrs/script/main/"..(dark and "darkwallpaper.png" or "background.png"))
+   if not STATE.alive() or current~=revision then return end
+   if logo then
+    window:SetIcon(logo)
+    for _,object in ipairs(gui:GetDescendants()) do
+     if object:IsA("ImageButton") and object.Name:find("Launcher") then object.Image=logo end
+    end
+   end
+   local bg=frame:FindFirstChild("BrandBackground")
+   if bg and wallpaper then bg.Image=wallpaper end
+  end)
+ end
+ function window:BindThemeSettings(settings)
+  track(game:GetService("RunService").Heartbeat,function()
+   local name=settings.UITheme=="Itachi - Dark" and "Itachi - Dark" or "Itachi - Red"
+   if self.ThemeName~=name then self:SetTheme(name) end
+  end)
+ end
+end
+
 return window
 end
 local Foccus = {}
