@@ -2266,7 +2266,7 @@ local function paint(view)
  local selected=selectedTab==view.Tab
  animate(view.Button,.25,{Position=UDim2.fromOffset(0,0),BackgroundTransparency=1})
  view.Accent.BackgroundTransparency=selected and .25 or 1
- animate(view.Title,.2,{TextColor3=selected and Theme.Gold or Color3.fromRGB(view.Hover and 255 or 145,view.Hover and 255 or 145,view.Hover and 255 or 145)})
+  animate(view.Title,.2,{TextColor3=selected and Theme.Gold or Color3.fromRGB(view.Hover and 255 or 210,view.Hover and 255 or 210,view.Hover and 255 or 210)})
  local gray=view.Hover and 205 or selected and 185 or 95
  animate(view.Description,.2,{TextColor3=Color3.fromRGB(gray,gray,gray)})
  view.Halo.BackgroundTransparency=1
@@ -2311,7 +2311,7 @@ function window:AddTab(config)
  make("UICorner",accent,{CornerRadius=UDim.new(1,0)})
  local tabIcon=tostring(config.Icon or "layout-grid")
  if tabIcon:match("^%d+$") then tabIcon="rbxassetid://"..tabIcon end
- local tabImage=lucide[tabIcon] or (tabIcon:match("^rbxasset") and tabIcon)
+  local tabImage=lucide[tabIcon] or (tabIcon:match("^rbxasset") and tabIcon) or (tabIcon:match("^%w+://") and tabIcon)
  if not tabImage and getcustomasset then
   pcall(function() tabImage=getcustomasset("lucide-"..tabIcon..".png") end)
  end
@@ -2321,7 +2321,7 @@ function window:AddTab(config)
  local haloStroke=make("UIStroke",halo,{Color=Theme.Gold,Thickness=1,Transparency=1})
  local indicator=make("Frame",row,{Name="SelectionIndicator",AnchorPoint=Vector2.new(.5,1),Position=UDim2.new(.5,0,1,-2),Size=UDim2.fromOffset(8,1),BackgroundColor3=Theme.Gold,BackgroundTransparency=1,BorderSizePixel=0,ZIndex=8})
  make("UIGradient",indicator,{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.24,.3),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(.76,.3),NumberSequenceKeypoint.new(1,1)})})
- local image=make("ImageLabel",row,{Name="Icon",Visible=true,ScaleType=Enum.ScaleType.Fit,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromOffset(24,24),BackgroundTransparency=1,Image=tabImage,ImageColor3=Theme.Gold,ImageTransparency=1,ZIndex=6})
+  local image=make("ImageLabel",row,{Name="Icon",Visible=true,ScaleType=Enum.ScaleType.Fit,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromOffset(24,24),BackgroundTransparency=1,Image=tabImage,ImageColor3=config.PreserveIconColor and Color3.new(1,1,1) or Theme.Gold,ImageTransparency=1,ZIndex=6})
  local title=make("TextLabel",row,{Name="Title",Visible=false,BackgroundTransparency=1,Text=config.Title,TextTransparency=1,ZIndex=6})
  local clip=make("Frame",row,{Name="DescriptionClip",Visible=false,BackgroundTransparency=1,ZIndex=6})
  local description=make("TextLabel",clip,{Name="Description",Size=UDim2.fromScale(1,1),AutomaticSize=Enum.AutomaticSize.X,BackgroundTransparency=1,Text=config.Description or "",Font=Enum.Font.Roboto,TextSize=13,TextColor3=Color3.fromRGB(95,95,95),TextTransparency=1,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=7})
@@ -2691,6 +2691,9 @@ end
 getgenv().FoccusUILibrary = Foccus
 Foccus.APIVersion=1
 Foccus.LayoutRevision=2
+function Foccus:GetTabIcon(name)
+ return loadBrandAsset("tab-"..name,"https://raw.githubusercontent.com/itachidevrs/script/main/"..name..".png")
+end
 function Foccus:GetLogo()
 local updated=loadBrandAsset("logo-v2","https://raw.githubusercontent.com/itachidevrs/script/main/logo.png")
 if updated then return updated end
