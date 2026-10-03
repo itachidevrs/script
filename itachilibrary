@@ -2684,14 +2684,23 @@ track(frame.DescendantAdded,applyVisualStyle)
 do
  local red=table.clone(Theme)
  local records=setmetatable({},{__mode="k"})
+ local refreshers=setmetatable({},{__mode="k"})
+ local originalImages=setmetatable({},{__mode="k"})
+ local darkLogo
  local dark=false
  local revision=0
  local function convert(color)
-  local h,s,v=color:ToHSV()
-  if s>.25 and (h<.12 or h>.9) then return Color3.fromRGB(math.floor(v*220),math.floor(v*224),math.floor(v*235)) end
+  local _,s,v=color:ToHSV()
+  if s>.01 then return Color3.new(v,v,v) end
   return color
  end
  local function watch(object)
+  if dark and darkLogo then
+   if object:IsA("ImageButton") and (object.Name:find("Launcher") or object.Name=="CofizinGGToggle") then object.Image=darkLogo end
+   if object:IsA("ImageLabel") and object.Parent and object.Parent.Name=="TabButton" then
+    originalImages[object]=object.Image;object.Image=darkLogo;object.ImageColor3=Color3.new(1,1,1)
+   end
+  end
   local properties={}
   if object:IsA("GuiObject") then table.insert(properties,"BackgroundColor3") end
   if object:IsA("TextLabel") or object:IsA("TextButton") or object:IsA("TextBox") then table.insert(properties,"TextColor3") end
@@ -2713,6 +2722,17 @@ do
     end
    end
   end
+  refreshers[object]=function()
+   writing=true
+   for property,value in pairs(record) do
+    if dark and typeof(value)=="Color3" then object[property]=convert(value)
+    elseif dark and typeof(value)=="ColorSequence" then
+     local points={};for _,p in ipairs(value.Keypoints) do table.insert(points,ColorSequenceKeypoint.new(p.Time,convert(p.Value))) end
+     object[property]=ColorSequence.new(points)
+    else object[property]=value end
+   end
+   writing=false
+  end
   for _,property in ipairs(properties) do track(object:GetPropertyChangedSignal(property),function()apply(property)end);apply(property) end
  end
  for _,object in ipairs(gui:GetDescendants()) do watch(object) end
@@ -2724,7 +2744,7 @@ do
   local current=revision
   for key,value in pairs(red) do Theme[key]=dark and convert(value) or value end
   for object,record in pairs(records) do
-   if object.Parent then for property,value in pairs(record) do object[property]=value end end
+   if object.Parent then refreshers[object]() end
   end
   task.spawn(function()
    local logo=loadBrandAsset(dark and "dark-logo" or "logo-v2","https://raw.githubusercontent.com/itachidevrs/script/main/"..(dark and "darklogo.png" or "logo.png"))
@@ -2732,8 +2752,14 @@ do
    if not STATE.alive() or current~=revision then return end
    if logo then
     window:SetIcon(logo)
+    darkLogo=logo
     for _,object in ipairs(gui:GetDescendants()) do
-     if object:IsA("ImageButton") and object.Name:find("Launcher") then object.Image=logo end
+     if object:IsA("ImageButton") and (object.Name:find("Launcher") or object.Name=="CofizinGGToggle") then object.Image=logo end
+     if object:IsA("ImageLabel") and object.Parent and object.Parent.Name=="TabButton" then
+      originalImages[object]=originalImages[object] or object.Image
+      object.Image=dark and logo or originalImages[object]
+      object.ImageColor3=Color3.new(1,1,1)
+     end
     end
    end
    local bg=frame:FindFirstChild("BrandBackground")
