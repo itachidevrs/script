@@ -9,6 +9,17 @@ local function getcustomasset(path)
     return ok and type(value)=="string" and value or ""
 end
 
+local themeCatalog={
+ ["Itachi - Red"]={Logo="logo.png",Background="background.png",Accent=Color3.fromRGB(255,20,48)},
+ ["Itachi - Dark"]={Logo="darklogo.png",Background="darkwallpaper.png",Accent=Color3.fromRGB(225,225,225)},
+ ["Yuno - Green"]={Logo="greenlogo.png",Background="greenbackgroundpng.png",Accent=Color3.fromRGB(50,235,115)},
+ ["Rimuru - Blue"]={Logo="bluelogo.png",Background="bluebackground.png",Accent=Color3.fromRGB(45,165,255)},
+ ["Honred Gojo - White"]={Logo="whitelogo.png",Background="whitebackground.png",Accent=Color3.fromRGB(245,245,245)},
+ ["Luffy - Orange"]={Logo="orangelogo.png",Background="orangebackground.png",Accent=Color3.fromRGB(255,140,30)},
+ ["Minato - Yellow"]={Logo="yellowlogo.png",Background="yellowbackground.png",Accent=Color3.fromRGB(255,215,40)},
+ ["Milim - Pink"]={Logo="pinklogo.png",Background="pingbackground.png",Accent=Color3.fromRGB(255,100,185)},
+ ["Gojo - Purple"]={Logo="purplelogo.png",Background="purplebackground.png",Accent=Color3.fromRGB(180,90,255)},
+}
 local brandAssets,brandAttempts={},{}
 local function loadBrandAsset(name,url)
  if brandAssets[name] then return brandAssets[name] end
@@ -2051,7 +2062,7 @@ do
  make("UICorner",wallpaper,{CornerRadius=UDim.new(0,12)})
  task.spawn(function()
   local asset=loadBrandAsset("background",config.BackgroundUrl or "https://raw.githubusercontent.com/itachidevrs/script/main/background.png")
-  if asset and STATE.alive() and wallpaper.Parent and frame:GetAttribute("ThemeName")~="Itachi - Dark" then wallpaper.Image=asset end
+  if asset and STATE.alive() and wallpaper.Parent and (not frame:GetAttribute("ThemeName") or frame:GetAttribute("ThemeName")=="Itachi - Red") then wallpaper.Image=asset end
  end)
  -- Older game builds add their own wallpaper after the shared UI initializes.
  track(frame.ChildAdded,function(child)
@@ -2689,10 +2700,14 @@ do
  local originalImages=setmetatable({},{__mode="k"})
  local darkLogo
  local dark=false
+ local selectedTheme=themeCatalog["Itachi - Red"]
  local revision=0
  local function convert(color)
   local _,s,v=color:ToHSV()
-  if s>.01 then return Color3.new(v,v,v) end
+  if s>.01 then
+   local h,saturation=selectedTheme.Accent:ToHSV()
+   return Color3.fromHSV(h,math.min(s,saturation),v)
+  end
   return color
  end
  local function watch(object)
@@ -2714,7 +2729,8 @@ do
    if writing then return end
    local value=object[property]
    if typeof(value)=="Color3" then
-    if convert(value)~=value then record[property]=value end
+     local _,saturation=value:ToHSV()
+     if saturation>.01 then record[property]=value end
     if dark then writing=true;object[property]=convert(value);writing=false end
    elseif typeof(value)=="ColorSequence" then
     record[property]=record[property] or value
@@ -2740,17 +2756,19 @@ do
  for _,object in ipairs(gui:GetDescendants()) do watch(object) end
  track(gui.DescendantAdded,watch)
  function window:SetTheme(name)
-  name=name=="Itachi - Dark" and name or "Itachi - Red"
+  name=themeCatalog[name] and name or "Itachi - Red"
+  selectedTheme=themeCatalog[name]
   if self.ThemeName==name then return end
-  self.ThemeName=name;frame:SetAttribute("ThemeName",name);dark=name=="Itachi - Dark";revision=revision+1
+  self.ThemeName=name;frame:SetAttribute("ThemeName",name);dark=name~="Itachi - Red";revision=revision+1
   local current=revision
   for key,value in pairs(red) do Theme[key]=dark and convert(value) or value end
   for object,record in pairs(records) do
    if object.Parent then refreshers[object]() end
   end
   task.spawn(function()
-   local logo=loadBrandAsset(dark and "dark-logo" or "logo-v2","https://raw.githubusercontent.com/itachidevrs/script/main/"..(dark and "darklogo.png" or "logo.png"))
-   local wallpaper=loadBrandAsset(dark and "dark-background" or "background","https://raw.githubusercontent.com/itachidevrs/script/main/"..(dark and "darkwallpaper.png" or "background.png"))
+   local definition=selectedTheme
+   local logo=loadBrandAsset("theme-"..definition.Logo,"https://raw.githubusercontent.com/itachidevrs/script/main/"..definition.Logo)
+   local wallpaper=loadBrandAsset("theme-"..definition.Background,"https://raw.githubusercontent.com/itachidevrs/script/main/"..definition.Background)
    if not STATE.alive() or current~=revision then return end
    if logo then
     window:SetIcon(logo)
@@ -2768,11 +2786,12 @@ do
    if bg and wallpaper then bg.Image=wallpaper end
   end)
  end
+ function window:GetThemeAccent() return selectedTheme.Accent end
  function window:BindThemeSettings(settings)
   track(game:GetService("RunService").Heartbeat,function()
-   local name=settings.UITheme=="Itachi - Dark" and "Itachi - Dark" or "Itachi - Red"
+   local name=themeCatalog[settings.UITheme] and settings.UITheme or "Itachi - Red"
    if self.ThemeName~=name then self:SetTheme(name) end
-   local color=name=="Itachi - Dark" and Color3.fromRGB(225,225,225) or Color3.fromRGB(255,20,48)
+   local color=selectedTheme.Accent
    for scrollbar in pairs(themeScrollbars) do
     if scrollbar.Parent and scrollbar.ScrollBarImageColor3~=color then scrollbar.ScrollBarImageColor3=color end
    end
@@ -2790,6 +2809,9 @@ end
 
 getgenv().FoccusUILibrary = Foccus
 Foccus.APIVersion=1
+function Foccus:GetThemeOptions()
+ return {{Title="Itachi - Red",Value="Itachi - Red"},{Title="Itachi - Dark",Value="Itachi - Dark"},{Title="Yuno - Green",Value="Yuno - Green"},{Title="Rimuru - Blue",Value="Rimuru - Blue"},{Title="Honred Gojo - White",Value="Honred Gojo - White"},{Title="Luffy - Orange",Value="Luffy - Orange"},{Title="Minato - Yellow",Value="Minato - Yellow"},{Title="Milim - Pink",Value="Milim - Pink"},{Title="Gojo - Purple",Value="Gojo - Purple"}}
+end
 Foccus.LayoutRevision=2
 function Foccus:GetTabIcon(name)
  return loadBrandAsset("tab-"..name,"https://raw.githubusercontent.com/itachidevrs/script/main/"..name..".png")
