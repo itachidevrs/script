@@ -2684,6 +2684,7 @@ track(frame.DescendantAdded,applyVisualStyle)
 do
  local red=table.clone(Theme)
  local records=setmetatable({},{__mode="k"})
+ local themeScrollbars=setmetatable({},{__mode="k"})
  local refreshers=setmetatable({},{__mode="k"})
  local originalImages=setmetatable({},{__mode="k"})
  local darkLogo
@@ -2703,7 +2704,7 @@ do
   end
   local properties={}
   if object:IsA("GuiObject") then table.insert(properties,"BackgroundColor3") end
-  if object:IsA("ScrollingFrame") then table.insert(properties,"ScrollBarImageColor3") end
+  if object:IsA("ScrollingFrame") then themeScrollbars[object]=true;table.insert(properties,"ScrollBarImageColor3") end
   if object:IsA("TextLabel") or object:IsA("TextButton") or object:IsA("TextBox") then table.insert(properties,"TextColor3") end
   if object:IsA("ImageLabel") or object:IsA("ImageButton") then table.insert(properties,"ImageColor3") end
   if object:IsA("UIStroke") or object:IsA("UIGradient") then table.insert(properties,"Color") end
@@ -2771,6 +2772,10 @@ do
   track(game:GetService("RunService").Heartbeat,function()
    local name=settings.UITheme=="Itachi - Dark" and "Itachi - Dark" or "Itachi - Red"
    if self.ThemeName~=name then self:SetTheme(name) end
+   local color=name=="Itachi - Dark" and Color3.fromRGB(225,225,225) or Color3.fromRGB(255,20,48)
+   for scrollbar in pairs(themeScrollbars) do
+    if scrollbar.Parent and scrollbar.ScrollBarImageColor3~=color then scrollbar.ScrollBarImageColor3=color end
+   end
   end)
  end
 end
